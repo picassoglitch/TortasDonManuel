@@ -1,62 +1,225 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import QRCode from "qrcode";
 import { Download, Printer } from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import { LoadingRow } from "@/components/admin/ui";
+import { ErrorNote, Field, LoadingRow, Toggle, api } from "@/components/admin/ui";
 
-export function QrPanel({ url }: { url: string }) {
+const DEFAULT_SUBTITLE = "Desde 1972";
+const DEFAULT_CTA = "Escanéame para ver la carta";
+
+type SaveState = "idle" | "saving" | "saved" | "error";
+
+function useSaveSetting() {
+  const [state, setState] = useState<SaveState>("idle");
+
+  const save = useCallback(async (key: string, value: string) => {
+    setState("saving");
+    try {
+      await api("/api/admin/settings", {
+        method: "PUT",
+        body: JSON.stringify({ key, value }),
+      });
+      setState("saved");
+      setTimeout(() => setState("idle"), 2000);
+    } catch {
+      setState("error");
+    }
+  }, []);
+
+  return { state, setState, save };
+}
+
+function SaveNote({ state }: { state: SaveState }) {
+  if (state === "saved") return <span className="text-sm font-bold text-verde">Guardado</span>;
+  if (state === "error") return <span className="text-sm font-bold text-rojo">No se pudo guardar</span>;
+  return null;
+}
+
+function TextRow({
+  label,
+  settingKey,
+  value,
+  placeholder,
+  onChange,
+}: {
+  label: string;
+  settingKey: string;
+  value: string;
+  placeholder: string;
+  onChange: (v: string) => void;
+}) {
+  const { state, setState, save } = useSaveSetting();
+
+  return (
+    <div className="rounded-2xl border-2 border-negro/10 bg-white p-4">
+      <Field label={label}>
+        <input
+          value={value}
+          onChange={(e) => {
+            onChange(e.target.value);
+            setState("idle");
+          }}
+          placeholder={placeholder}
+          className="h-12 w-full rounded-xl border-2 border-negro/15 bg-white px-4 text-negro placeholder:text-negro/40 focus:border-rojo focus:outline-none"
+        />
+      </Field>
+      <div className="mt-2 flex min-h-9 items-center justify-end gap-3">
+        <SaveNote state={state} />
+        <Button size="sm" onClick={() => save(settingKey, value)} disabled={state === "saving"}>
+          {state === "saving" ? "Guardando…" : "Guardar"}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function ToggleRow({
+  label,
+  settingKey,
+  checked,
+  onChange,
+}: {
+  label: string;
+  settingKey: string;
+  checked: boolean;
+  onChange: (v: boolean) => void;
+}) {
+  const { state, save } = useSaveSetting();
+
+  return (
+    <div className="flex min-h-12 items-center justify-between gap-4 rounded-2xl border-2 border-negro/10 bg-white p-4">
+      <span className="text-sm font-bold uppercase tracking-wide text-negro/70">{label}</span>
+      <div className="flex items-center gap-3">
+        <SaveNote state={state} />
+        <Toggle
+          label={label}
+          checked={checked}
+          disabled={state === "saving"}
+          onChange={(v) => {
+            onChange(v);
+            save(settingKey, v ? "true" : "false");
+          }}
+        />
+      </div>
+    </div>
+  );
+}
+
+export function QrPanel({ defaultBase }: { defaultBase: string }) {
+  const [settings, setSettings] = useState<Record<string, string> | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
+
+  const [baseUrl, setBaseUrl] = useState("");
+  const [subtitle, setSubtitle] = useState("");
+  const [cta, setCta] = useState("");
+  const [showUrl, setShowUrl] = useState(true);
+
   const [dataUrl, setDataUrl] = useState<string | null>(null);
-  const [error, setError] = useState(false);
+  const [qrError, setQrError] = useState(false);
 
   useEffect(() => {
-    QRCode.toDataURL(url, {
+    api<{ settings: Record<string, string> }>("/api/admin/settings")
+      .then((data) => {
+        setSettings(data.settings);
+        setBaseUrl(data.settings.qr_base_url ?? "");
+        setSubtitle(data.settings.qr_subtitle ?? "");
+        setCta(data.settings.qr_cta ?? "");
+        setShowUrl(data.settings.qr_show_url !== "false");
+        setLoadError(null);
+      })
+      .catch((err) => {
+        setLoadError(err instanceof Error ? err.message : "No se pudieron cargar los ajustes");
+      });
+  }, []);
+
+  const effectiveBase = (baseUrl.trim() || defaultBase).replace(/\/$/, "");
+  const qrTarget = `${effectiveBase}/qr`;
+  const cardSubtitle = subtitle.trim() || DEFAULT_SUBTITLE;
+  const cardCta = cta.trim() || DEFAULT_CTA;
+
+  useEffect(() => {
+    if (settings === null) return;
+    setQrError(false);
+    QRCode.toDataURL(qrTarget, {
       width: 1024,
       margin: 2,
       color: { dark: "#191512", light: "#ffffff" },
     })
       .then(setDataUrl)
-      .catch(() => setError(true));
-  }, [url]);
+      .catch(() => setQrError(true));
+  }, [qrTarget, settings]);
 
   return (
     <div className="mx-auto max-w-3xl">
       <div className="print:hidden">
         <h1 className="text-[clamp(1.5rem,5vw,2rem)]">Código QR</h1>
         <p className="mt-1 mb-6 text-sm text-negro/60">
-          Imprímelo y pégalo en las mesas o el mostrador. Al escanearlo se abre la carta digital ({url}) — solo
-          lectura, sin pedidos.
+          Imprímelo y pégalo en las mesas o el mostrador. Al escanearlo se abre la carta digital. El código apunta a{" "}
+          {qrTarget}, así que si algún día cambia el destino, los impresos siguen funcionando.
         </p>
       </div>
 
-      {error && (
-        <p className="rounded-xl border-2 border-rojo/30 bg-rojo/10 px-4 py-3 font-semibold text-rojo print:hidden">
-          No se pudo generar el código QR.
-        </p>
-      )}
-      {!dataUrl && !error && <LoadingRow text="Generando QR…" />}
+      <ErrorNote msg={loadError} />
+      {settings === null && !loadError && <LoadingRow text="Cargando ajustes…" />}
 
-      {dataUrl && (
+      {settings !== null && (
         <>
-          <div className="mx-auto flex max-w-sm flex-col items-center gap-4 rounded-2xl border-2 border-negro/10 bg-white p-8 text-center print:max-w-none print:border-0">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/media/logo-light.png" alt="Tortas Don Manuel" className="w-52" />
-            <p className="text-xs font-bold uppercase tracking-[0.3em] text-rojo">Desde 1972</p>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={dataUrl} alt={`Código QR de la carta: ${url}`} className="w-full max-w-72 print:max-w-96" />
-            <p className="font-bold uppercase tracking-wide">Escanéame para ver la carta</p>
-            <p className="text-sm text-negro/50 print:text-negro">{url}</p>
+          <div className="mb-6 flex flex-col gap-3 print:hidden">
+            <TextRow
+              label="URL base del sitio"
+              settingKey="qr_base_url"
+              value={baseUrl}
+              placeholder={defaultBase}
+              onChange={setBaseUrl}
+            />
+            <TextRow
+              label="Subtítulo"
+              settingKey="qr_subtitle"
+              value={subtitle}
+              placeholder={DEFAULT_SUBTITLE}
+              onChange={setSubtitle}
+            />
+            <TextRow
+              label="Texto principal"
+              settingKey="qr_cta"
+              value={cta}
+              placeholder={DEFAULT_CTA}
+              onChange={setCta}
+            />
+            <ToggleRow label="Mostrar URL en la tarjeta" settingKey="qr_show_url" checked={showUrl} onChange={setShowUrl} />
           </div>
 
-          <div className="mt-6 flex flex-wrap justify-center gap-3 print:hidden">
-            <a href={dataUrl} download="qr-carta-tortas-don-manuel.png" className="btn-dark">
-              <Download size={18} /> Descargar PNG
-            </a>
-            <Button onClick={() => window.print()}>
-              <Printer size={18} /> Imprimir
-            </Button>
-          </div>
+          {qrError && (
+            <p className="rounded-xl border-2 border-rojo/30 bg-rojo/10 px-4 py-3 font-semibold text-rojo print:hidden">
+              No se pudo generar el código QR.
+            </p>
+          )}
+          {!dataUrl && !qrError && <LoadingRow text="Generando QR…" />}
+
+          {dataUrl && (
+            <>
+              <div className="mx-auto flex max-w-sm flex-col items-center gap-4 rounded-2xl border-2 border-negro/10 bg-white p-8 text-center print:max-w-none print:border-0">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/media/logo-light.png" alt="Tortas Don Manuel" className="w-52" />
+                <p className="text-xs font-bold uppercase tracking-[0.3em] text-rojo">{cardSubtitle}</p>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={dataUrl} alt={`Código QR de la carta: ${qrTarget}`} className="w-full max-w-72 print:max-w-96" />
+                <p className="font-bold uppercase tracking-wide">{cardCta}</p>
+                {showUrl && <p className="text-sm text-negro/50 print:text-negro">{effectiveBase}</p>}
+              </div>
+
+              <div className="mt-6 flex flex-wrap justify-center gap-3 print:hidden">
+                <a href={dataUrl} download="qr-carta-tortas-don-manuel.png" className="btn-dark">
+                  <Download size={18} /> Descargar PNG
+                </a>
+                <Button onClick={() => window.print()}>
+                  <Printer size={18} /> Imprimir
+                </Button>
+              </div>
+            </>
+          )}
         </>
       )}
     </div>

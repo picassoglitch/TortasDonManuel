@@ -5,6 +5,7 @@ import { prisma } from "@/lib/db";
 import { getMenu, getBuilder } from "@/lib/menu";
 import { BUILDER_BASE_PRICE } from "@/lib/menu-data";
 import { createPreference, isMpConfigured } from "@/lib/mercadopago";
+import { getSiteConfig } from "@/lib/settings";
 
 const lineSchema = z.object({
   kind: z.enum(["item", "custom"]),
@@ -91,11 +92,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: msg }, { status: 400 });
   }
 
-  if (parsed.paymentMethod === "MERCADOPAGO" && !isMpConfigured()) {
-    return NextResponse.json(
-      { error: "El pago en línea no está disponible por el momento. Elige pago en tienda." },
-      { status: 400 }
-    );
+  if (parsed.paymentMethod === "MERCADOPAGO") {
+    const { paymentsEnabled } = await getSiteConfig();
+    if (!paymentsEnabled || !isMpConfigured()) {
+      return NextResponse.json(
+        { error: "El pago en línea no está disponible por el momento. Elige pago en tienda." },
+        { status: 400 }
+      );
+    }
   }
 
   const idx = await buildPriceIndexes();

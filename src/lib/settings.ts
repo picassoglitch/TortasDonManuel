@@ -18,6 +18,26 @@ export async function getSettings(keys: string[]): Promise<Record<string, string
   }
 }
 
+export type SiteConfig = {
+  paymentsEnabled: boolean;
+  whatsapp: string;
+  phone: string;
+};
+
+export async function getSiteConfig(): Promise<SiteConfig> {
+  const s = await getSettings(["payments_enabled", "whatsapp_number"]);
+  const paymentsEnabled =
+    s.payments_enabled !== undefined
+      ? s.payments_enabled === "true"
+      : process.env.NEXT_PUBLIC_PAYMENTS_ENABLED === "true";
+  return {
+    paymentsEnabled,
+    whatsapp:
+      s.whatsapp_number?.trim() || process.env.NEXT_PUBLIC_STORE_WHATSAPP || "525556312022",
+    phone: process.env.NEXT_PUBLIC_STORE_PHONE || "5556312022",
+  };
+}
+
 export async function getNosotros(): Promise<NosotrosContent> {
   const s = await getSettings(["nosotros_titulo", "nosotros_p1", "nosotros_p2"]);
   return {

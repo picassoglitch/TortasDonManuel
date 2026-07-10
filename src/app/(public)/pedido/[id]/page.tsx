@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { OrderStatus } from "./OrderStatus";
+import { getSiteConfig } from "@/lib/settings";
 
 export const metadata: Metadata = {
   title: "Tu pedido — Tortas Don Manuel",
@@ -12,10 +13,14 @@ type Props = {
 };
 
 export default async function PedidoPage({ params, searchParams }: Props) {
-  const [{ id }, { ok }] = await Promise.all([params, searchParams]);
+  const [{ id }, { ok }, { whatsapp }] = await Promise.all([
+    params,
+    searchParams,
+    getSiteConfig(),
+  ]);
   return (
     <main className="pt-20 sm:pt-24">
-      <OrderStatus id={id} justCreated={ok === "1"} />
+      <OrderStatus id={id} justCreated={ok === "1"} whatsapp={whatsapp} />
     </main>
   );
 }

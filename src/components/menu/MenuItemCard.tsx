@@ -24,6 +24,15 @@ export function MenuItemCard({ item, readonly = false, added = false, onAdd }: P
         !item.isAvailable && "opacity-60"
       )}
     >
+      {item.imageUrl && (
+        <img
+          src={item.imageUrl}
+          alt={item.name}
+          loading="lazy"
+          className="mb-3 aspect-video w-full rounded-xl object-cover"
+        />
+      )}
+
       <div className="flex items-start justify-between gap-3">
         <h3 className="font-display text-xl leading-tight text-negro">{item.name}</h3>
         {only && (

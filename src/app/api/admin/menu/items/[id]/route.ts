@@ -7,6 +7,7 @@ const schema = z.object({
   name: z.string().trim().min(1).optional(),
   description: z.string().trim().nullable().optional(),
   categoryId: z.string().min(1).optional(),
+  imageUrl: z.string().trim().nullable().optional(),
   variants: z.array(z.object({ label: z.string().trim().min(1), price: z.number().min(0) })).min(1).optional(),
   tags: z.array(z.string()).optional(),
   isAvailable: z.boolean().optional(),
@@ -21,8 +22,9 @@ export async function PATCH(req: Request, ctx: { params: Promise<{ id: string }>
   const { id } = await ctx.params;
   const parsed = schema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return badRequest();
+  const data = { ...parsed.data, ...(parsed.data.imageUrl === "" ? { imageUrl: null } : {}) };
   try {
-    const item = await prisma.menuItem.update({ where: { id }, data: parsed.data });
+    const item = await prisma.menuItem.update({ where: { id }, data });
     return NextResponse.json({ item });
   } catch {
     return serverError();

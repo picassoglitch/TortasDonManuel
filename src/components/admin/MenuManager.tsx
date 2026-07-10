@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { Image as ImageIcon, Pencil, Plus, Trash2, X } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -15,6 +15,7 @@ type AdminItem = {
   name: string;
   description: string | null;
   categoryId: string;
+  imageUrl: string | null;
   variants: Variant[];
   tags: string[];
   isAvailable: boolean;
@@ -39,6 +40,7 @@ type ItemForm = {
   name: string;
   description: string;
   categoryId: string;
+  imageUrl: string;
   variants: VariantRow[];
   tags: string;
   isAvailable: boolean;
@@ -60,6 +62,7 @@ function emptyItem(categoryId: string, sortOrder: number): ItemForm {
     name: "",
     description: "",
     categoryId,
+    imageUrl: "",
     variants: [{ label: "Sencilla", price: "" }],
     tags: "",
     isAvailable: true,
@@ -75,6 +78,7 @@ function toItemForm(item: AdminItem): ItemForm {
     name: item.name,
     description: item.description ?? "",
     categoryId: item.categoryId,
+    imageUrl: item.imageUrl ?? "",
     variants: item.variants.map((v) => ({ label: v.label, price: String(v.price) })),
     tags: item.tags.join(", "),
     isAvailable: item.isAvailable,
@@ -82,6 +86,51 @@ function toItemForm(item: AdminItem): ItemForm {
     isFeatured: item.isFeatured,
     sortOrder: String(item.sortOrder),
   };
+}
+
+type MediaAssetRow = { id: string; name: string; size: number };
+
+function ImagePicker({ onSelect }: { onSelect: (url: string) => void }) {
+  const [assets, setAssets] = useState<MediaAssetRow[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    api<{ assets: MediaAssetRow[] }>("/api/admin/media")
+      .then((data) => setAssets(data.assets))
+      .catch((err) => setError(err instanceof Error ? err.message : "No se pudieron cargar las fotos"));
+  }, []);
+
+  return (
+    <div className="rounded-xl border-2 border-negro/15 bg-white p-3">
+      <ErrorNote msg={error} />
+      {assets === null && !error && <LoadingRow text="Cargando fotos…" />}
+      {assets?.length === 0 && (
+        <p className="py-4 text-center text-sm font-semibold text-negro/50">
+          No hay fotos todavía. Súbelas en la sección Medios.
+        </p>
+      )}
+      {assets && assets.length > 0 && (
+        <div className="grid max-h-56 grid-cols-3 gap-2 overflow-y-auto">
+          {assets.map((a) => (
+            <button
+              key={a.id}
+              type="button"
+              onClick={() => onSelect(`/api/media/${a.id}`)}
+              title={a.name}
+              className="overflow-hidden rounded-lg border-2 border-transparent hover:border-rojo focus:border-rojo focus:outline-none"
+            >
+              <img
+                src={`/api/media/${a.id}`}
+                alt={a.name}
+                loading="lazy"
+                className="aspect-square w-full object-cover"
+              />
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }
 
 function ItemModal({
@@ -98,6 +147,7 @@ function ItemModal({
   const [f, setF] = useState(form);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [showPicker, setShowPicker] = useState(false);
 
   function set<K extends keyof ItemForm>(key: K, value: ItemForm[K]) {
     setF((prev) => ({ ...prev, [key]: value }));
@@ -133,6 +183,7 @@ function ItemModal({
       name: f.name.trim(),
       description: f.description.trim() || (f.id ? null : undefined),
       categoryId: f.categoryId,
+      imageUrl: f.imageUrl.trim() || (f.id ? null : undefined),
       variants,
       tags: f.tags.split(",").map((t) => t.trim()).filter(Boolean),
       isAvailable: f.isAvailable,
@@ -192,6 +243,54 @@ function ItemModal({
             ))}
           </select>
         </Field>
+
+        <div>
+          <p className="mb-1.5 text-sm font-bold uppercase tracking-wide text-negro/70">Foto</p>
+          <div className="flex items-center gap-3">
+            {f.imageUrl ? (
+              <img
+                src={f.imageUrl}
+                alt="Foto del platillo"
+                className="h-16 w-16 shrink-0 rounded-xl border border-negro/10 object-cover"
+              />
+            ) : (
+              <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl border-2 border-dashed border-negro/20 text-negro/30">
+                <ImageIcon size={24} />
+              </span>
+            )}
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => setShowPicker((v) => !v)}
+                className="inline-flex min-h-11 items-center gap-1.5 rounded-xl border-2 border-negro/15 bg-white px-4 text-sm font-bold uppercase tracking-wide text-negro/70 hover:border-rojo hover:text-rojo"
+              >
+                <ImageIcon size={16} /> {showPicker ? "Cerrar" : "Elegir imagen"}
+              </button>
+              {f.imageUrl && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    set("imageUrl", "");
+                    setShowPicker(false);
+                  }}
+                  className="inline-flex min-h-11 items-center gap-1.5 rounded-xl px-4 text-sm font-bold uppercase tracking-wide text-rojo hover:bg-rojo/10"
+                >
+                  <X size={16} /> Quitar
+                </button>
+              )}
+            </div>
+          </div>
+          {showPicker && (
+            <div className="mt-2">
+              <ImagePicker
+                onSelect={(url) => {
+                  set("imageUrl", url);
+                  setShowPicker(false);
+                }}
+              />
+            </div>
+          )}
+        </div>
 
         <div>
           <p className="mb-1.5 text-sm font-bold uppercase tracking-wide text-negro/70">Variantes y precios</p>

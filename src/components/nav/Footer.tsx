@@ -1,11 +1,18 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Clock, Instagram, MapPin, MessageCircle, Phone } from "lucide-react";
+import { getSiteConfig } from "@/lib/settings";
 
 const MAPS_URL =
   "https://www.google.com/maps/search/?api=1&query=Tizim%C3%ADn+163%2C+Lomas+de+Padierna%2C+Tlalpan%2C+14200+CDMX";
 
-export function Footer() {
+export async function Footer() {
+  const { whatsapp, phone } = await getSiteConfig();
+  const phoneHref = phone.length > 10 ? `tel:+${phone}` : `tel:+52${phone}`;
+  const phoneDisplay =
+    phone.length === 10
+      ? `${phone.slice(0, 2)} ${phone.slice(2, 6)} ${phone.slice(6)}`
+      : phone;
   return (
     <footer className="texture-grain relative bg-carbon text-crema">
       <div className="relative z-[2] mx-auto max-w-6xl px-4 py-12 sm:py-16">
@@ -47,15 +54,15 @@ export function Footer() {
             <ul className="mt-3 space-y-2 text-sm">
               <li>
                 <a
-                  href="tel:+525556312022"
+                  href={phoneHref}
                   className="inline-flex min-h-11 items-center gap-2 text-crema/80 transition-colors hover:text-dorado"
                 >
-                  <Phone size={16} className="text-dorado" /> 55 5631 2022
+                  <Phone size={16} className="text-dorado" /> {phoneDisplay}
                 </a>
               </li>
               <li>
                 <a
-                  href="https://wa.me/525556312022"
+                  href={`https://wa.me/${whatsapp}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex min-h-11 items-center gap-2 text-crema/80 transition-colors hover:text-dorado"
@@ -98,7 +105,17 @@ export function Footer() {
 
         <div className="mt-10 flex flex-col gap-2 border-t border-crema/10 pt-6 text-xs text-crema/50 sm:flex-row sm:items-center sm:justify-between">
           <p>© {new Date().getFullYear()} Tortas Don Manuel · Tlalpan, CDMX</p>
-          <p>Hecho a mano, una torta a la vez.</p>
+          <p>
+            Hecho a mano, una torta a la vez. · Sitio por{" "}
+            <a
+              href="https://nexo-ai.world"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-crema/40 transition-colors hover:text-dorado"
+            >
+              Nexo-AI
+            </a>
+          </p>
         </div>
       </div>
     </footer>

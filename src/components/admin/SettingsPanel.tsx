@@ -76,6 +76,129 @@ function KvField({
   );
 }
 
+function PaymentsToggle({
+  initial,
+  mpConfigured,
+}: {
+  initial: boolean;
+  mpConfigured: boolean;
+}) {
+  const [on, setOn] = useState(initial);
+  const [state, setState] = useState<"idle" | "saved" | "error">("idle");
+
+  async function toggle() {
+    const next = !on;
+    setOn(next);
+    setState("idle");
+    try {
+      await api("/api/admin/settings", {
+        method: "PUT",
+        body: JSON.stringify({ key: "payments_enabled", value: next ? "true" : "false" }),
+      });
+      setState("saved");
+      setTimeout(() => setState("idle"), 2000);
+    } catch {
+      setOn(!next);
+      setState("error");
+    }
+  }
+
+  return (
+    <div className="rounded-2xl border-2 border-negro/10 bg-white p-4">
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <h2 className="text-lg">Pagos en línea</h2>
+          <p className="mt-1 text-sm text-negro/60">
+            Los clientes {on ? "ven" : "no ven"} la opción de pagar con Mercado Pago al hacer
+            su pedido.
+          </p>
+        </div>
+        <button
+          type="button"
+          role="switch"
+          aria-checked={on}
+          aria-label="Pagos en línea"
+          onClick={toggle}
+          className={`relative h-11 w-20 shrink-0 rounded-full transition-colors ${
+            on ? "bg-verde" : "bg-negro/15"
+          }`}
+        >
+          <span
+            aria-hidden
+            className={`absolute left-1 top-1 size-9 rounded-full bg-white shadow transition-transform ${
+              on ? "translate-x-9" : ""
+            }`}
+          />
+        </button>
+      </div>
+      <div className="mt-1 min-h-5 text-right">
+        {state === "saved" && <span className="text-sm font-bold text-verde">Guardado</span>}
+        {state === "error" && (
+          <span className="text-sm font-bold text-rojo">No se pudo guardar</span>
+        )}
+      </div>
+      {!mpConfigured && (
+        <p className="mt-1 rounded-xl bg-dorado/15 px-3 py-2 text-sm font-semibold text-negro/80">
+          Falta configurar la llave de Mercado Pago (MERCADOPAGO_ACCESS_TOKEN) en el servidor.
+          Aunque el interruptor esté encendido, el pago en línea no aparecerá en el sitio hasta
+          configurarla.
+        </p>
+      )}
+      <p className="mt-2 text-sm font-bold text-negro/70">
+        El pago en efectivo al recoger siempre está disponible.
+      </p>
+    </div>
+  );
+}
+
+function WhatsAppField({ initial }: { initial: string }) {
+  const [value, setValue] = useState(initial);
+  const [state, setState] = useState<"idle" | "saving" | "saved" | "error">("idle");
+
+  async function save() {
+    setState("saving");
+    try {
+      await api("/api/admin/settings", {
+        method: "PUT",
+        body: JSON.stringify({ key: "whatsapp_number", value }),
+      });
+      setState("saved");
+      setTimeout(() => setState("idle"), 2000);
+    } catch {
+      setState("error");
+    }
+  }
+
+  return (
+    <div className="rounded-2xl border-2 border-negro/10 bg-white p-4">
+      <Field label="WhatsApp de pedidos">
+        <input
+          type="tel"
+          inputMode="numeric"
+          value={value}
+          onChange={(e) => {
+            setValue(e.target.value.replace(/\D/g, "").slice(0, 15));
+            setState("idle");
+          }}
+          placeholder="525556312022"
+          className="min-h-12 w-full rounded-xl border-2 border-negro/15 bg-white px-4 py-3 text-negro placeholder:text-negro/40 focus:border-rojo focus:outline-none"
+        />
+      </Field>
+      <p className="mt-2 text-sm text-negro/60">
+        Es el número al que los clientes te escriben desde las páginas de pedido y el sitio.
+        Solo dígitos, con código de país (52 para México).
+      </p>
+      <div className="mt-2 flex items-center justify-end gap-3">
+        {state === "saved" && <span className="text-sm font-bold text-verde">Guardado</span>}
+        {state === "error" && <span className="text-sm font-bold text-rojo">No se pudo guardar</span>}
+        <Button size="sm" onClick={save} disabled={state === "saving"}>
+          {state === "saving" ? "Guardando…" : "Guardar"}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 function PasswordForm() {
   const [current, setCurrent] = useState("");
   const [next, setNext] = useState("");
@@ -146,7 +269,13 @@ function PasswordForm() {
   );
 }
 
-export function SettingsPanel({ paymentsEnabled }: { paymentsEnabled: boolean }) {
+export function SettingsPanel({
+  paymentsDefault,
+  mpConfigured,
+}: {
+  paymentsDefault: boolean;
+  mpConfigured: boolean;
+}) {
   const [settings, setSettings] = useState<Record<string, string> | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -185,20 +314,15 @@ export function SettingsPanel({ paymentsEnabled }: { paymentsEnabled: boolean })
           {NOSOTROS_FIELDS.map((field) => (
             <KvField key={field.key} field={field} initial={settings[field.key] ?? ""} />
           ))}
+
+          <h2 className="mt-4 text-lg">Pedidos y pagos</h2>
+          <PaymentsToggle
+            initial={(settings.payments_enabled ?? (paymentsDefault ? "true" : "false")) === "true"}
+            mpConfigured={mpConfigured}
+          />
+          <WhatsAppField initial={settings.whatsapp_number ?? ""} />
         </>
       )}
-
-      <div className="rounded-2xl border-2 border-negro/10 bg-white p-4">
-        <h2 className="text-lg">Pagos en línea</h2>
-        <p className="mt-1 text-sm text-negro/60">
-          {paymentsEnabled
-            ? "Mercado Pago está ACTIVO. Se controla con la variable NEXT_PUBLIC_PAYMENTS_ENABLED del servidor."
-            : "Mercado Pago está DESACTIVADO. Para activarlo se cambia la variable NEXT_PUBLIC_PAYMENTS_ENABLED en el servidor (no desde aquí)."}
-        </p>
-        <p className="mt-2 text-sm font-bold text-negro/70">
-          El pago en efectivo al recoger siempre está disponible.
-        </p>
-      </div>
 
       <PasswordForm />
     </div>

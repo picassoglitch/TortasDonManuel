@@ -152,3 +152,15 @@ model Setting {
   value     String
   updatedAt DateTime @updatedAt
 }
+
+// ---------------------------------------------------------------------------
+// Uploaded media (menu photos etc.) — stored in DB, Railway FS is ephemeral
+// ---------------------------------------------------------------------------
+model MediaAsset {
+  id        String   @id @default(cuid())
+  name      String
+  mime      String
+  size      Int
+  data      Bytes
+  createdAt DateTime @default(now())
+}

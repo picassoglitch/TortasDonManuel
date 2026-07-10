@@ -27,7 +27,6 @@ import { useCart } from "@/components/cart/CartContext";
 import { cn, formatPrice } from "@/lib/utils";
 
 const TEL = "tel:+525556312022";
-const WA = "https://wa.me/525556312022?text=Hola%2C%20quiero%20hacer%20un%20pedido";
 const MAPS_EMBED =
   "https://www.google.com/maps?q=Tizim%C3%ADn+163%2C+Lomas+de+Padierna%2C+Tlalpan%2C+14200+CDMX&output=embed";
 const MAPS_URL =
@@ -79,7 +78,13 @@ export type NosotrosContent = {
   parrafo2: string;
 };
 
-export default function HomeClient({ nosotros }: { nosotros: NosotrosContent }) {
+export default function HomeClient({
+  nosotros,
+  whatsapp,
+}: {
+  nosotros: NosotrosContent;
+  whatsapp: string;
+}) {
   return (
     <>
       <Hero />
@@ -87,7 +92,7 @@ export default function HomeClient({ nosotros }: { nosotros: NosotrosContent }) 
       <Favoritas />
       <BuilderTeaser />
       <Nosotros content={nosotros} />
-      <Ubicacion />
+      <Ubicacion whatsapp={whatsapp} />
     </>
   );
 }
@@ -502,9 +507,10 @@ function Nosotros({ content }: { content: NosotrosContent }) {
   );
 }
 
-function Ubicacion() {
+function Ubicacion({ whatsapp }: { whatsapp: string }) {
   const reduce = useReducedMotion();
   const rv = reduce ? fadeOnly : fadeUp;
+  const waUrl = `https://wa.me/${whatsapp}?text=Hola%2C%20quiero%20hacer%20un%20pedido`;
   return (
     <section
       id="ubicacion"
@@ -550,7 +556,7 @@ function Ubicacion() {
               <Phone size={18} /> 55 5631 2022
             </a>
             <a
-              href={WA}
+              href={waUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-verde px-6 font-bold uppercase tracking-wide text-crema transition-colors hover:bg-verde/85"

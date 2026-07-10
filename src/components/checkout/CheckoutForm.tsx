@@ -9,7 +9,6 @@ import { useCart } from "@/components/cart/CartContext";
 import { Input } from "@/components/ui/Input";
 import { formatPrice, cn } from "@/lib/utils";
 
-const PAYMENTS_ENABLED = process.env.NEXT_PUBLIC_PAYMENTS_ENABLED === "true";
 const ASAP = "Lo antes posible";
 
 const schema = z.object({
@@ -37,7 +36,7 @@ function pickupSlots(): string[] {
   return out;
 }
 
-export function CheckoutForm() {
+export function CheckoutForm({ paymentsEnabled }: { paymentsEnabled: boolean }) {
   const router = useRouter();
   const { lines, subtotal, clear } = useCart();
 
@@ -250,7 +249,7 @@ export function CheckoutForm() {
           <legend className="mb-1.5 text-sm font-bold uppercase tracking-wide text-negro/70">
             ¿Cómo pagas?
           </legend>
-          <div className={cn("grid gap-2", PAYMENTS_ENABLED && "sm:grid-cols-2")}>
+          <div className={cn("grid gap-2", paymentsEnabled && "sm:grid-cols-2")}>
             <button
               type="button"
               aria-pressed={payment === "CASH"}
@@ -266,7 +265,7 @@ export function CheckoutForm() {
                 <span className="text-sm text-negro/60">Efectivo al recoger</span>
               </span>
             </button>
-            {PAYMENTS_ENABLED && (
+            {paymentsEnabled && (
               <button
                 type="button"
                 aria-pressed={payment === "MERCADOPAGO"}

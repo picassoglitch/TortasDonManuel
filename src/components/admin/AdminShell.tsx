@@ -6,9 +6,11 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   ClipboardList,
+  Image as ImageIcon,
   Layers,
   LogOut,
   Menu,
+  Plug,
   QrCode,
   Settings,
   UtensilsCrossed,
@@ -21,6 +23,8 @@ const NAV = [
   { href: "/admin/menu", label: "Menú", icon: UtensilsCrossed },
   { href: "/admin/armala", label: "Arma tu Torta", icon: Layers },
   { href: "/admin/qr", label: "Código QR", icon: QrCode },
+  { href: "/admin/medios", label: "Medios", icon: ImageIcon },
+  { href: "/admin/integraciones", label: "Integraciones", icon: Plug },
   { href: "/admin/ajustes", label: "Ajustes", icon: Settings },
 ];
 

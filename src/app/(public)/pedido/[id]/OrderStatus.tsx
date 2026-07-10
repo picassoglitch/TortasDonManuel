@@ -50,7 +50,6 @@ const STATUS_INDEX: Record<OrderData["status"], number> = {
   CANCELLED: -1,
 };
 
-const WHATSAPP = process.env.NEXT_PUBLIC_STORE_WHATSAPP ?? "525556312022";
 const MAPS_URL =
   "https://maps.google.com/?q=Tizim%C3%ADn+163,+Lomas+de+Padierna,+Tlalpan,+CDMX";
 
@@ -62,7 +61,15 @@ function paymentBadge(o: OrderData) {
   return <Badge variant="dorado">Pagas al recoger</Badge>;
 }
 
-export function OrderStatus({ id, justCreated }: { id: string; justCreated: boolean }) {
+export function OrderStatus({
+  id,
+  justCreated,
+  whatsapp,
+}: {
+  id: string;
+  justCreated: boolean;
+  whatsapp: string;
+}) {
   const [order, setOrder] = useState<OrderData | null>(null);
   const [notFound, setNotFound] = useState(false);
 
@@ -243,7 +250,7 @@ export function OrderStatus({ id, justCreated }: { id: string; justCreated: bool
             <MapPin className="size-5" /> Cómo llegar
           </a>
           <a
-            href={`https://wa.me/${WHATSAPP}?text=${encodeURIComponent(`Hola, tengo una duda sobre mi pedido #${order.number}`)}`}
+            href={`https://wa.me/${whatsapp}?text=${encodeURIComponent(`Hola, tengo una duda sobre mi pedido #${order.number}`)}`}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-verde font-bold uppercase tracking-wide text-crema transition-colors hover:brightness-110"
