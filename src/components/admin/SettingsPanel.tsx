@@ -10,6 +10,23 @@ const KV_FIELDS: { key: string; label: string; placeholder: string; rows: number
   { key: "banner_text", label: "Anuncio (banner del sitio)", placeholder: "Ej. Cerramos el 25 de diciembre", rows: 2 },
 ];
 
+const NOSOTROS_FIELDS: typeof KV_FIELDS = [
+  { key: "nosotros_titulo", label: "Título", placeholder: "DESDE 1972", rows: 1 },
+  {
+    key: "nosotros_p1",
+    label: "Primer párrafo",
+    placeholder:
+      "Hace más de cincuenta años, Don Manuel abrió una pequeña tortería en Tlalpan…",
+    rows: 4,
+  },
+  {
+    key: "nosotros_p2",
+    label: "Segundo párrafo (opcional)",
+    placeholder: "Hoy seguimos en la misma esquina, con la misma receta…",
+    rows: 4,
+  },
+];
+
 function KvField({
   field,
   initial,
@@ -157,6 +174,15 @@ export function SettingsPanel({ paymentsEnabled }: { paymentsEnabled: boolean })
       {settings !== null && (
         <>
           {KV_FIELDS.map((field) => (
+            <KvField key={field.key} field={field} initial={settings[field.key] ?? ""} />
+          ))}
+
+          <h2 className="mt-4 text-lg">Historia de “Nosotros”</h2>
+          <p className="-mt-3 text-sm text-negro/60">
+            Es la sección de la página de inicio. Si dejas un campo vacío se usa el texto
+            original. Los cambios aparecen en el sitio en menos de un minuto.
+          </p>
+          {NOSOTROS_FIELDS.map((field) => (
             <KvField key={field.key} field={field} initial={settings[field.key] ?? ""} />
           ))}
         </>

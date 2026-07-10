@@ -4,13 +4,41 @@ import { MENU_FALLBACK, BUILDER_FALLBACK } from "../src/lib/menu-data";
 
 const prisma = new PrismaClient();
 
+// SEED_ADMINS="correo:contraseña,correo:contraseña" — solo se crean si no existen
+function parseTeamAdmins(): { email: string; password: string; name: string; role: string }[] {
+  const raw = process.env.SEED_ADMINS;
+  if (!raw) return [];
+  return raw
+    .split(",")
+    .map((pair) => {
+      const i = pair.indexOf(":");
+      if (i < 1) return null;
+      const email = pair.slice(0, i).trim();
+      const password = pair.slice(i + 1).trim();
+      if (!email || !password) return null;
+      return { email, password, name: email.split("@")[0], role: "owner" };
+    })
+    .filter((a): a is NonNullable<typeof a> => a !== null);
+}
+
 async function seedAdmin() {
+  // Cuentas del equipo: solo se crean si no existen (no pisa contraseñas cambiadas en el panel)
+  for (const a of parseTeamAdmins()) {
+    const email = a.email.trim().toLowerCase();
+    const existing = await prisma.admin.findUnique({ where: { email } });
+    if (existing) {
+      console.log(`Admin ya existe: ${email}`);
+      continue;
+    }
+    await prisma.admin.create({
+      data: { email, name: a.name, passwordHash: await bcrypt.hash(a.password, 10), role: a.role },
+    });
+    console.log(`Admin creado: ${email}`);
+  }
+
   const email = process.env.SEED_ADMIN_EMAIL;
   const password = process.env.SEED_ADMIN_PASSWORD;
-  if (!email || !password) {
-    console.log("SEED_ADMIN_EMAIL/SEED_ADMIN_PASSWORD no definidos, se omite admin");
-    return;
-  }
+  if (!email || !password) return;
   const passwordHash = await bcrypt.hash(password, 10);
   await prisma.admin.upsert({
     where: { email: email.trim().toLowerCase() },
