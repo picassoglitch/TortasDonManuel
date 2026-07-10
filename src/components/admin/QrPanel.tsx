@@ -4,10 +4,10 @@ import { useCallback, useEffect, useState } from "react";
 import QRCode from "qrcode";
 import { Download, Printer } from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import { ErrorNote, Field, LoadingRow, Toggle, api } from "@/components/admin/ui";
+import { ErrorNote, Field, LoadingRow, api } from "@/components/admin/ui";
 
 const DEFAULT_SUBTITLE = "Desde 1972";
-const DEFAULT_CTA = "Escanéame para ver la carta";
+const DEFAULT_CTA = "Escanéame para ver el menú";
 
 type SaveState = "idle" | "saving" | "saved" | "error";
 
@@ -75,46 +75,12 @@ function TextRow({
   );
 }
 
-function ToggleRow({
-  label,
-  settingKey,
-  checked,
-  onChange,
-}: {
-  label: string;
-  settingKey: string;
-  checked: boolean;
-  onChange: (v: boolean) => void;
-}) {
-  const { state, save } = useSaveSetting();
-
-  return (
-    <div className="flex min-h-12 items-center justify-between gap-4 rounded-2xl border-2 border-negro/10 bg-white p-4">
-      <span className="text-sm font-bold uppercase tracking-wide text-negro/70">{label}</span>
-      <div className="flex items-center gap-3">
-        <SaveNote state={state} />
-        <Toggle
-          label={label}
-          checked={checked}
-          disabled={state === "saving"}
-          onChange={(v) => {
-            onChange(v);
-            save(settingKey, v ? "true" : "false");
-          }}
-        />
-      </div>
-    </div>
-  );
-}
-
 export function QrPanel({ defaultBase }: { defaultBase: string }) {
   const [settings, setSettings] = useState<Record<string, string> | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
 
-  const [baseUrl, setBaseUrl] = useState("");
   const [subtitle, setSubtitle] = useState("");
   const [cta, setCta] = useState("");
-  const [showUrl, setShowUrl] = useState(true);
 
   const [dataUrl, setDataUrl] = useState<string | null>(null);
   const [qrError, setQrError] = useState(false);
@@ -123,10 +89,8 @@ export function QrPanel({ defaultBase }: { defaultBase: string }) {
     api<{ settings: Record<string, string> }>("/api/admin/settings")
       .then((data) => {
         setSettings(data.settings);
-        setBaseUrl(data.settings.qr_base_url ?? "");
         setSubtitle(data.settings.qr_subtitle ?? "");
         setCta(data.settings.qr_cta ?? "");
-        setShowUrl(data.settings.qr_show_url !== "false");
         setLoadError(null);
       })
       .catch((err) => {
@@ -134,7 +98,7 @@ export function QrPanel({ defaultBase }: { defaultBase: string }) {
       });
   }, []);
 
-  const effectiveBase = (baseUrl.trim() || defaultBase).replace(/\/$/, "");
+  const effectiveBase = defaultBase.replace(/\/$/, "");
   const qrTarget = `${effectiveBase}/qr`;
   const cardSubtitle = subtitle.trim() || DEFAULT_SUBTITLE;
   const cardCta = cta.trim() || DEFAULT_CTA;
@@ -156,7 +120,7 @@ export function QrPanel({ defaultBase }: { defaultBase: string }) {
       <div className="print:hidden">
         <h1 className="text-[clamp(1.5rem,5vw,2rem)]">Código QR</h1>
         <p className="mt-1 mb-6 text-sm text-negro/60">
-          Imprímelo y pégalo en las mesas o el mostrador. Al escanearlo se abre la carta digital. El código apunta a{" "}
+          Imprímelo y pégalo en las mesas o el mostrador. Al escanearlo se abre el menú del sitio. El código apunta a{" "}
           {qrTarget}, así que si algún día cambia el destino, los impresos siguen funcionando.
         </p>
       </div>
@@ -167,13 +131,6 @@ export function QrPanel({ defaultBase }: { defaultBase: string }) {
       {settings !== null && (
         <>
           <div className="mb-6 flex flex-col gap-3 print:hidden">
-            <TextRow
-              label="URL base del sitio"
-              settingKey="qr_base_url"
-              value={baseUrl}
-              placeholder={defaultBase}
-              onChange={setBaseUrl}
-            />
             <TextRow
               label="Subtítulo"
               settingKey="qr_subtitle"
@@ -188,7 +145,6 @@ export function QrPanel({ defaultBase }: { defaultBase: string }) {
               placeholder={DEFAULT_CTA}
               onChange={setCta}
             />
-            <ToggleRow label="Mostrar URL en la tarjeta" settingKey="qr_show_url" checked={showUrl} onChange={setShowUrl} />
           </div>
 
           {qrError && (
@@ -207,7 +163,7 @@ export function QrPanel({ defaultBase }: { defaultBase: string }) {
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={dataUrl} alt={`Código QR de la carta: ${qrTarget}`} className="w-full max-w-72 print:max-w-96" />
                 <p className="font-bold uppercase tracking-wide">{cardCta}</p>
-                {showUrl && <p className="text-sm text-negro/50 print:text-negro">{effectiveBase}</p>}
+                <p className="text-sm text-negro/50 print:text-negro">{effectiveBase}</p>
               </div>
 
               <div className="mt-6 flex flex-wrap justify-center gap-3 print:hidden">

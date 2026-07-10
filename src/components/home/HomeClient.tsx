@@ -78,18 +78,27 @@ export type NosotrosContent = {
   parrafo2: string;
 };
 
+export type Favorita = {
+  name: string;
+  price: number;
+  desc: string;
+  img: string;
+};
+
 export default function HomeClient({
   nosotros,
   whatsapp,
+  favoritas,
 }: {
   nosotros: NosotrosContent;
   whatsapp: string;
+  favoritas?: Favorita[];
 }) {
   return (
     <>
       <Hero />
       <Marquee />
-      <Favoritas />
+      <Favoritas items={favoritas?.length ? favoritas : FAVORITAS} />
       <BuilderTeaser />
       <Nosotros content={nosotros} />
       <Ubicacion whatsapp={whatsapp} />
@@ -207,7 +216,7 @@ function Marquee() {
   );
 }
 
-function Favoritas() {
+function Favoritas({ items }: { items: readonly Favorita[] }) {
   const reduce = useReducedMotion();
   const rv = reduce ? fadeOnly : fadeUp;
   return (
@@ -240,7 +249,7 @@ function Favoritas() {
           viewport={{ once: true, margin: "-60px" }}
           className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4"
         >
-          {FAVORITAS.map((f) => (
+          {items.map((f) => (
             <motion.div key={f.name} variants={rv} className="h-full">
               <TiltCard fav={f} />
             </motion.div>
@@ -266,7 +275,7 @@ function Favoritas() {
   );
 }
 
-function TiltCard({ fav }: { fav: (typeof FAVORITAS)[number] }) {
+function TiltCard({ fav }: { fav: Favorita }) {
   const reduce = useReducedMotion();
   const { addItem } = useCart();
   const [added, setAdded] = useState(false);
