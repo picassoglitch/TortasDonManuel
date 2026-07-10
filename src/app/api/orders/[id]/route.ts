@@ -1,0 +1,31 @@
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/db";
+
+export async function GET(
+  _req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
+  try {
+    const order = await prisma.order.findUnique({ where: { id } });
+    if (!order) {
+      return NextResponse.json({ error: "Pedido no encontrado" }, { status: 404 });
+    }
+    return NextResponse.json({
+      id: order.id,
+      number: order.number,
+      status: order.status,
+      paymentStatus: order.paymentStatus,
+      paymentMethod: order.paymentMethod,
+      items: order.items,
+      total: order.total,
+      pickupTime: order.pickupTime,
+      createdAt: order.createdAt,
+    });
+  } catch {
+    return NextResponse.json(
+      { error: "No pudimos consultar el pedido. Intenta de nuevo." },
+      { status: 503 }
+    );
+  }
+}

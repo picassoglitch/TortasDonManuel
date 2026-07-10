@@ -1,0 +1,154 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Admin users
+// ---------------------------------------------------------------------------
+model Admin {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String
+  passwordHash String
+  role         String   @default("admin") // admin | owner
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+// ---------------------------------------------------------------------------
+// Menu structure
+// ---------------------------------------------------------------------------
+model Category {
+  id          String     @id @default(cuid())
+  slug        String     @unique
+  name        String
+  subtitle    String? // e.g. "con queso / con huevo" column hints
+  description String?
+  sortOrder   Int        @default(0)
+  isActive    Boolean    @default(true)
+  items       MenuItem[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+model MenuItem {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  name        String
+  description String?
+  categoryId  String
+  category    Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  imageUrl    String?
+  // Price variants: [{ "label": "Sencilla", "price": 45 }, ...]
+  variants    Json     @default("[]")
+  tags        String[] @default([])
+  isAvailable Boolean  @default(true)
+  isHoliday   Boolean  @default(false) // "solo días festivos"
+  isFeatured  Boolean  @default(false)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([categoryId])
+}
+
+// ---------------------------------------------------------------------------
+// "Arma tu torta" builder
+// ---------------------------------------------------------------------------
+enum BuilderGroupType {
+  SINGLE // radio — choose exactly one
+  MULTI // checkbox — choose many
+}
+
+model BuilderGroup {
+  id          String           @id @default(cuid())
+  key         String           @unique // pan | proteina | queso | topping | extra
+  name        String
+  description String?
+  type        BuilderGroupType @default(MULTI)
+  minSelect   Int              @default(0)
+  maxSelect   Int              @default(0) // 0 = unlimited
+  required    Boolean          @default(false)
+  sortOrder   Int              @default(0)
+  isActive    Boolean          @default(true)
+  options     BuilderOption[]
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+}
+
+model BuilderOption {
+  id          String       @id @default(cuid())
+  groupId     String
+  group       BuilderGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+  price       Float        @default(0)
+  imageUrl    String?
+  isAvailable Boolean      @default(true)
+  isDefault   Boolean      @default(false)
+  sortOrder   Int          @default(0)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@index([groupId])
+}
+
+// ---------------------------------------------------------------------------
+// Orders
+// ---------------------------------------------------------------------------
+enum PaymentMethod {
+  CASH
+  MERCADOPAGO
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+enum OrderStatus {
+  RECEIVED
+  PREPARING
+  READY
+  COMPLETED
+  CANCELLED
+}
+
+model Order {
+  id            String        @id @default(cuid())
+  number        Int           @unique @default(autoincrement())
+  customerName  String
+  customerPhone String
+  notes         String?
+  pickupTime    String? // "Lo antes posible" or "14:30"
+  // Snapshot of ordered items incl. builder selections
+  items         Json          @default("[]")
+  subtotal      Float         @default(0)
+  total         Float         @default(0)
+  paymentMethod PaymentMethod @default(CASH)
+  paymentStatus PaymentStatus @default(PENDING)
+  status        OrderStatus   @default(RECEIVED)
+  mpPreferenceId String?
+  mpPaymentId    String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@index([status])
+  @@index([createdAt])
+}
+
+// ---------------------------------------------------------------------------
+// Key/value store settings (editable by admin)
+// ---------------------------------------------------------------------------
+model Setting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+}

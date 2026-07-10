@@ -1,0 +1,39 @@
+# dependencies
+/node_modules
+/.pnp
+.pnp.*
+
+# next.js
+/.next/
+/out/
+next-env.d.ts
+
+# production
+/build
+
+# env
+.env
+.env*.local
+
+# prisma
+/prisma/dev.db
+/prisma/dev.db-journal
+
+# misc
+.DS_Store
+*.pem
+/coverage
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# typescript
+*.tsbuildinfo
+
+# local working files (menu source, renders, raw media)
+/_menu_pages/
+/_render.py
+/menu_source.pdf
+/Media/

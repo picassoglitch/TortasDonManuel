@@ -1,0 +1,96 @@
+@import "tailwindcss";
+
+@theme {
+  --color-crema: #f2ede4;
+  --color-rojo: #a8201a;
+  --color-rojo-vivo: #c93b32;
+  --color-negro: #191512;
+  --color-carbon: #26211d;
+  --color-dorado: #d9a441;
+  --color-verde: #4a7048;
+}
+
+@theme inline {
+  --font-display: var(--font-alfa);
+  --font-body: var(--font-archivo);
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+  }
+
+  body {
+    @apply bg-crema text-negro font-body antialiased;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply font-display font-normal;
+    text-wrap: balance;
+  }
+
+  ::selection {
+    background: var(--color-rojo);
+    color: var(--color-crema);
+  }
+
+  button,
+  a {
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-rojo px-6 font-bold uppercase tracking-wide text-crema transition-colors hover:bg-rojo-vivo disabled:pointer-events-none disabled:opacity-50;
+  }
+
+  .btn-dark {
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-negro px-6 font-bold uppercase tracking-wide text-crema transition-colors hover:bg-carbon disabled:pointer-events-none disabled:opacity-50;
+  }
+
+  .btn-outline {
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border-2 border-negro px-6 font-bold uppercase tracking-wide text-negro transition-colors hover:bg-negro hover:text-crema disabled:pointer-events-none disabled:opacity-50;
+  }
+}
+
+/* Grano de pintura: feTurbulence en data-URI, sin assets */
+.texture-grain {
+  position: relative;
+  isolation: isolate;
+}
+
+.texture-grain::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 180px 180px;
+  mix-blend-mode: overlay;
+  opacity: 0.28;
+}
+
+/* Letrero pintado a mano: rojo con sombra dura negra desplazada */
+.text-painted {
+  color: var(--color-rojo);
+  text-shadow: 0.045em 0.055em 0 var(--painted-shadow, var(--color-negro));
+}
+
+.no-scrollbar {
+  scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
