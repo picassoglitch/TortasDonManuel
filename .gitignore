@@ -32,8 +32,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 
-# local working files (menu source, renders, raw media)
+# local working files (menu source, renders, raw media, scratch scripts)
 /_menu_pages/
-/_render.py
+/_*.py
 /menu_source.pdf
 /Media/

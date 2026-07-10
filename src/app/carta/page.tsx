@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { Instagram, MapPin, Phone } from "lucide-react";
 import { getMenu } from "@/lib/menu";
 import { formatPrice } from "@/lib/utils";
@@ -68,13 +69,18 @@ export default async function CartaPage() {
         <p className="text-xs font-black uppercase tracking-[0.35em] text-negro/60">
           Desde 1972
         </p>
-        <h1 className="text-painted mt-2 font-display text-[clamp(2.5rem,13vw,4.5rem)] uppercase leading-[0.95]">
-          Tortas
-          <br />
-          Don Manuel
+        <h1 className="mx-auto mt-3 w-[min(78vw,340px)]">
+          <Image
+            src="/media/logo-light.png"
+            alt="Tortas Don Manuel"
+            width={1600}
+            height={498}
+            priority
+            className="h-auto w-full"
+          />
         </h1>
         <p className="mx-auto mt-4 max-w-[26ch] text-sm italic leading-snug text-negro/70">
-          Tradición que se siente, sabor que no se olvida.
+          Tradición con sazón.
         </p>
       </header>
 

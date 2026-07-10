@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { Clock, Instagram, MapPin, MessageCircle, Phone } from "lucide-react";
 
@@ -10,17 +11,18 @@ export function Footer() {
       <div className="relative z-[2] mx-auto max-w-6xl px-4 py-12 sm:py-16">
         <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
           <div>
-            <p className="font-display text-2xl leading-none text-crema [text-shadow:0.045em_0.055em_0_var(--color-rojo)]">
-              TORTAS
-            </p>
-            <p className="mt-1 text-xs font-black uppercase tracking-[0.32em] text-crema/80">
-              Don Manuel
-            </p>
+            <Image
+              src="/media/logo-dark.png"
+              alt="Tortas Don Manuel"
+              width={1600}
+              height={498}
+              className="h-12 w-auto"
+            />
             <span className="mt-4 inline-block -rotate-2 rounded-full bg-dorado px-3 py-1 text-xs font-bold uppercase tracking-widest text-negro">
               Desde 1972
             </span>
             <p className="mt-4 max-w-xs text-sm text-crema/60">
-              Tradición que se siente, sabor que no se olvida.
+              Tradición con sazón.
             </p>
           </div>
 

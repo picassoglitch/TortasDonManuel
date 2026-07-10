@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
@@ -48,13 +49,15 @@ export function Navbar() {
       )}
     >
       <nav className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 md:h-20">
-        <Link href="/" className="flex flex-col leading-none" aria-label="Tortas Don Manuel — inicio">
-          <span className="font-display text-2xl text-rojo [text-shadow:0.04em_0.05em_0_var(--color-negro)]">
-            TORTAS
-          </span>
-          <span className="text-[0.62rem] font-black uppercase tracking-[0.32em] text-negro">
-            Don Manuel
-          </span>
+        <Link href="/" className="flex items-center" aria-label="Tortas Don Manuel — inicio">
+          <Image
+            src="/media/logo-light.png"
+            alt="Tortas Don Manuel"
+            width={1600}
+            height={498}
+            priority
+            className="h-10 w-auto md:h-12"
+          />
         </Link>
 
         <div className="hidden items-center gap-7 md:flex">
@@ -117,7 +120,13 @@ export function Navbar() {
             >
               <div className="relative z-[2] flex flex-1 flex-col p-6">
                 <div className="flex items-center justify-between">
-                  <span className="font-display text-xl text-rojo">TORTAS</span>
+                  <Image
+                    src="/media/logo-light.png"
+                    alt="Tortas Don Manuel"
+                    width={1600}
+                    height={498}
+                    className="h-9 w-auto"
+                  />
                   <button
                     onClick={() => setPanel(false)}
                     className="flex h-11 w-11 items-center justify-center rounded-xl text-negro hover:bg-negro/10"

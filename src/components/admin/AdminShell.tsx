@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -69,8 +70,8 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
 function Brand() {
   return (
     <div className="border-b border-crema/10 px-5 py-5">
-      <p className="font-display text-xl leading-none text-crema">DON MANUEL</p>
-      <p className="mt-1 text-xs font-bold uppercase tracking-widest text-dorado">Administración</p>
+      <Image src="/media/logo-dark.png" alt="Tortas Don Manuel" width={1600} height={498} className="h-9 w-auto" />
+      <p className="mt-2 text-xs font-bold uppercase tracking-widest text-dorado">Administración</p>
     </div>
   );
 }
@@ -88,7 +89,7 @@ export function AdminShell({ email, children }: { email: string; children: React
         >
           <Menu size={24} />
         </button>
-        <p className="font-display text-lg text-crema">DON MANUEL</p>
+        <Image src="/media/logo-dark.png" alt="Tortas Don Manuel" width={1600} height={498} className="h-8 w-auto" />
         <span className="w-11" />
       </header>
 

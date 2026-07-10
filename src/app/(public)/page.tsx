@@ -57,13 +57,13 @@ const FAVORITAS = [
     name: "Mexicana",
     price: 139,
     desc: "Jamón, queso, pierna, salchicha, milanesa, longaniza",
-    img: "/media/torta-3.jpg",
+    img: "/media/torta-4.png",
   },
   {
     name: "Hawaiana",
     price: 85,
     desc: "Jamón, queso Oaxaca, piña",
-    img: "/media/torta-2.jpg",
+    img: "/media/torta-5.png",
   },
   {
     name: "Rusa",
@@ -119,27 +119,25 @@ function Hero() {
           >
             Desde 1972
           </motion.span>
-          <motion.h1
-            variants={rv}
-            className="text-painted mt-4 leading-[0.88] text-[clamp(4.4rem,20vw,13rem)]"
-          >
-            TORTAS
+          <motion.h1 variants={rv} className="mt-6 w-[min(88vw,760px)]">
+            <Image
+              src="/media/logo-light.png"
+              alt="Tortas Don Manuel"
+              width={1600}
+              height={498}
+              priority
+              className="h-auto w-full drop-shadow-[0_2px_1px_rgba(242,237,228,0.6)]"
+            />
           </motion.h1>
-          <motion.p
-            variants={rv}
-            className="font-display leading-none tracking-[0.08em] text-negro text-[clamp(1.6rem,6.5vw,4rem)]"
-          >
-            DON MANUEL
-          </motion.p>
           <motion.div
             variants={rv}
-            className="mt-3 h-2 w-32 -rotate-1 rounded-full bg-dorado sm:w-44"
+            className="mt-4 h-2 w-32 -rotate-1 rounded-full bg-dorado sm:w-44"
           />
           <motion.p
             variants={rv}
-            className="mt-6 max-w-md text-balance font-medium text-negro/75 text-[clamp(1rem,2.5vw,1.25rem)]"
+            className="mt-6 max-w-md text-balance font-semibold uppercase tracking-[0.14em] text-negro/80 text-[clamp(1.05rem,2.8vw,1.4rem)]"
           >
-            Tradición que se siente, sabor que no se olvida.
+            Tradición con sazón
           </motion.p>
           <motion.div
             variants={rv}
@@ -189,7 +187,7 @@ function Marquee() {
           >
             <span className="px-5">{t}</span>
             <span aria-hidden className="text-dorado">
-              ✶
+              
             </span>
           </span>
         ))}

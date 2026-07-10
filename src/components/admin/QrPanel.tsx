@@ -40,8 +40,9 @@ export function QrPanel({ url }: { url: string }) {
       {dataUrl && (
         <>
           <div className="mx-auto flex max-w-sm flex-col items-center gap-4 rounded-2xl border-2 border-negro/10 bg-white p-8 text-center print:max-w-none print:border-0">
-            <p className="font-display text-2xl leading-tight">TORTAS DON MANUEL</p>
-            <p className="-mt-2 text-xs font-bold uppercase tracking-[0.3em] text-rojo">Desde 1972</p>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/media/logo-light.png" alt="Tortas Don Manuel" className="w-52" />
+            <p className="text-xs font-bold uppercase tracking-[0.3em] text-rojo">Desde 1972</p>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={dataUrl} alt={`Código QR de la carta: ${url}`} className="w-full max-w-72 print:max-w-96" />
             <p className="font-bold uppercase tracking-wide">Escanéame para ver la carta</p>
