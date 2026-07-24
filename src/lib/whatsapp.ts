@@ -24,10 +24,11 @@ export async function getNotifyNumber(): Promise<string> {
   return s.notify_whatsapp?.trim() || process.env.WHATSAPP_NOTIFY_NUMBER || "5527928137";
 }
 
-// Los celulares de México llegan como 521XXXXXXXXXX en la API.
-// Canonizamos a los últimos 10 dígitos para comparar y a 521+10 para enviar.
+// Meta normaliza los celulares de México como 52 + 10 dígitos (ya sin el "1"
+// viejo). Canonizamos a los últimos 10 dígitos para comparar remitentes
+// (pueden llegar como 52... o 521...) y a 52+10 para enviar.
 export const last10 = (n: string) => n.replace(/\D/g, "").slice(-10);
-const toSendable = (n: string) => `521${last10(n)}`;
+const toSendable = (n: string) => `52${last10(n)}`;
 
 type Button = { id: string; title: string };
 
