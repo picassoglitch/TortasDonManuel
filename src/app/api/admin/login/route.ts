@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { verifyLogin } from "@/lib/auth";
 import { createSession } from "@/lib/session";
+import { log } from "@/lib/log";
 import { badRequest, serverError } from "../_guard";
 
 const schema = z.object({
@@ -21,11 +22,14 @@ export async function POST(req: Request) {
   try {
     const admin = await verifyLogin(parsed.data.email, parsed.data.password);
     if (!admin) {
+      log.warn("admin", `Intento de login fallido para ${parsed.data.email}`);
       return NextResponse.json({ error: "Correo o contraseña incorrectos" }, { status: 401 });
     }
     await createSession(admin.id, admin.email);
+    log.ok("admin", `Sesión iniciada: ${admin.email}`);
     return NextResponse.json({ ok: true });
-  } catch {
+  } catch (e) {
+    log.error("admin", `Error en login de ${parsed.data.email}`, e);
     return serverError();
   }
 }

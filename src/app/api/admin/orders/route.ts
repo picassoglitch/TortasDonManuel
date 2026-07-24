@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { log } from "@/lib/log";
 import { requireApiSession, serverError, unauthorized } from "../_guard";
 
 export async function GET() {
@@ -17,7 +18,8 @@ export async function GET() {
       take: 120,
     });
     return NextResponse.json({ orders });
-  } catch {
+  } catch (e) {
+    log.error("db", "No se pudieron leer los pedidos para el panel", e);
     return serverError();
   }
 }

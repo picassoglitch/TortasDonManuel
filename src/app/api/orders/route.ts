@@ -6,6 +6,8 @@ import { getMenu, getBuilder } from "@/lib/menu";
 import { BUILDER_BASE_PRICE } from "@/lib/menu-data";
 import { createPreference, isMpConfigured } from "@/lib/mercadopago";
 import { getSiteConfig } from "@/lib/settings";
+import { log, money } from "@/lib/log";
+import { notifyNewOrder } from "@/lib/whatsapp";
 
 const lineSchema = z.object({
   kind: z.enum(["item", "custom"]),
@@ -89,12 +91,19 @@ export async function POST(req: NextRequest) {
       e instanceof z.ZodError
         ? e.errors[0]?.message ?? "Datos inválidos"
         : "Datos inválidos";
+    log.warn("pedidos", `Pedido rechazado por datos inválidos: ${msg}`);
     return NextResponse.json({ error: msg }, { status: 400 });
   }
 
   if (parsed.paymentMethod === "MERCADOPAGO") {
     const { paymentsEnabled } = await getSiteConfig();
     if (!paymentsEnabled || !isMpConfigured()) {
+      log.warn(
+        "pagos",
+        `Pedido de ${parsed.customerName} pidió Mercado Pago pero está ${
+          paymentsEnabled ? "sin configurar (falta MERCADOPAGO_ACCESS_TOKEN)" : "desactivado en el panel"
+        }`
+      );
       return NextResponse.json(
         { error: "El pago en línea no está disponible por el momento. Elige pago en tienda." },
         { status: 400 }
@@ -130,12 +139,24 @@ export async function POST(req: NextRequest) {
         paymentMethod: parsed.paymentMethod,
       },
     });
-  } catch {
+  } catch (e) {
+    log.error("db", `No se pudo guardar el pedido de ${parsed.customerName} (${money(total)})`, e);
     return NextResponse.json(
       { error: "No pudimos registrar tu pedido. Intenta de nuevo o llama al 55 5631 2022." },
       { status: 503 }
     );
   }
+
+  const itemCount = items.reduce((n, it) => n + it.qty, 0);
+  log.ok(
+    "pedidos",
+    `Pedido #${order.number} creado — ${parsed.customerName} · ${itemCount} art. · ${money(total)} · ${
+      parsed.paymentMethod === "CASH" ? "pago en tienda" : "Mercado Pago"
+    }${parsed.pickupTime ? ` · recoge: ${parsed.pickupTime}` : ""}`
+  );
+
+  // Aviso por WhatsApp al dueño; no bloquea la respuesta al cliente.
+  void notifyNewOrder(order);
 
   if (parsed.paymentMethod === "MERCADOPAGO") {
     try {
@@ -145,8 +166,14 @@ export async function POST(req: NextRequest) {
         where: { id: order.id },
         data: { mpPreferenceId: pref.id },
       });
+      log.ok("pagos", `Pedido #${order.number}: link de pago Mercado Pago listo (pref ${pref.id})`);
       return NextResponse.json({ id: order.id, initPoint: pref.initPoint }, { status: 201 });
-    } catch {
+    } catch (e) {
+      log.error(
+        "pagos",
+        `Pedido #${order.number}: falló crear el link de pago en Mercado Pago; el cliente pagará en tienda`,
+        e
+      );
       return NextResponse.json(
         {
           id: order.id,

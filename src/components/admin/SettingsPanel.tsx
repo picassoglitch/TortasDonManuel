@@ -151,7 +151,19 @@ function PaymentsToggle({
   );
 }
 
-function WhatsAppField({ initial }: { initial: string }) {
+function PhoneSettingField({
+  label,
+  settingKey,
+  initial,
+  placeholder,
+  help,
+}: {
+  label: string;
+  settingKey: string;
+  initial: string;
+  placeholder: string;
+  help: string;
+}) {
   const [value, setValue] = useState(initial);
   const [state, setState] = useState<"idle" | "saving" | "saved" | "error">("idle");
 
@@ -160,7 +172,7 @@ function WhatsAppField({ initial }: { initial: string }) {
     try {
       await api("/api/admin/settings", {
         method: "PUT",
-        body: JSON.stringify({ key: "whatsapp_number", value }),
+        body: JSON.stringify({ key: settingKey, value }),
       });
       setState("saved");
       setTimeout(() => setState("idle"), 2000);
@@ -171,7 +183,7 @@ function WhatsAppField({ initial }: { initial: string }) {
 
   return (
     <div className="rounded-2xl border-2 border-negro/10 bg-white p-4">
-      <Field label="WhatsApp de pedidos">
+      <Field label={label}>
         <input
           type="tel"
           inputMode="numeric"
@@ -180,14 +192,11 @@ function WhatsAppField({ initial }: { initial: string }) {
             setValue(e.target.value.replace(/\D/g, "").slice(0, 15));
             setState("idle");
           }}
-          placeholder="525556312022"
+          placeholder={placeholder}
           className="min-h-12 w-full rounded-xl border-2 border-negro/15 bg-white px-4 py-3 text-negro placeholder:text-negro/40 focus:border-rojo focus:outline-none"
         />
       </Field>
-      <p className="mt-2 text-sm text-negro/60">
-        Es el número al que los clientes te escriben desde las páginas de pedido y el sitio.
-        Solo dígitos, con código de país (52 para México).
-      </p>
+      <p className="mt-2 text-sm text-negro/60">{help}</p>
       <div className="mt-2 flex items-center justify-end gap-3">
         {state === "saved" && <span className="text-sm font-bold text-verde">Guardado</span>}
         {state === "error" && <span className="text-sm font-bold text-rojo">No se pudo guardar</span>}
@@ -320,7 +329,20 @@ export function SettingsPanel({
             initial={(settings.payments_enabled ?? (paymentsDefault ? "true" : "false")) === "true"}
             mpConfigured={mpConfigured}
           />
-          <WhatsAppField initial={settings.whatsapp_number ?? ""} />
+          <PhoneSettingField
+            label="WhatsApp de pedidos"
+            settingKey="whatsapp_number"
+            initial={settings.whatsapp_number ?? ""}
+            placeholder="525556312022"
+            help="Es el número al que los clientes te escriben desde las páginas de pedido y el sitio. Solo dígitos, con código de país (52 para México)."
+          />
+          <PhoneSettingField
+            label="WhatsApp de avisos (dueño)"
+            settingKey="notify_whatsapp"
+            initial={settings.notify_whatsapp ?? ""}
+            placeholder="5527928137"
+            help="Número que recibe un WhatsApp con cada pedido nuevo y puede responder con los botones para cambiar el estado (preparando, listo, entregado) sin entrar al panel. 10 dígitos, celular de México."
+          />
         </>
       )}
 
