@@ -30,7 +30,9 @@ Sin base de datos, el sitio público sigue funcionando con el menú estático de
 - `DATABASE_URL` — la **pooled** (host con `-pooler`), con `?sslmode=require&pgbouncer=true&connection_limit=1`. Cada invocación serverless abre su propia conexión; sin pooler y sin `connection_limit=1` la base se satura.
 - `DIRECT_URL` — la directa, sin `-pooler`. Solo la usa `prisma migrate`.
 
-**2. Proyecto.** Vercel → **Add New → Project** → importa este repo. Framework: Next.js (autodetectado). No cambies el Build Command: el repo trae un script `vercel-build` que corre `prisma generate && prisma migrate deploy && next build`, así que **las migraciones se aplican en cada deploy** (esto reemplaza al `startCommand` que se usaba en Railway).
+**2. Proyecto.** Vercel → **Add New → Project** → importa este repo. Framework: Next.js (autodetectado). No cambies el Build Command: el repo trae un script `vercel-build` que corre `prisma generate`, luego `scripts/deploy-migrations.mjs` y luego `next build`, así que **las migraciones se aplican en cada deploy** (esto reemplaza al `startCommand` que se usaba en Railway).
+
+Si `DATABASE_URL` o `DIRECT_URL` todavía no están configuradas, ese script avisa y sigue de largo en vez de tumbar el build: el sitio público sube igual con el menú de respaldo. Si sí están y la migración falla, el build truena a propósito.
 
 **3. Variables de entorno** (Settings → Environment Variables), para Production y Preview: todo lo de `.env.example`. Mínimo indispensable: `DATABASE_URL`, `DIRECT_URL`, `SESSION_SECRET`, `NEXT_PUBLIC_SITE_URL` (el dominio final).
 
