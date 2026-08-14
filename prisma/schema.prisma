@@ -4,7 +4,10 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  // Conexión pooled (pgbouncer) que usan las funciones serverless de Vercel
+  url       = env("DATABASE_URL")
+  // Conexión directa, sin pooler: la usan `migrate` y `db push`
+  directUrl = env("DIRECT_URL")
 }
 
 // ---------------------------------------------------------------------------

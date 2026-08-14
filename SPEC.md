@@ -1,6 +1,6 @@
 # Tortas Don Manuel — Build Spec
 
-Production web app for a torta restaurant in Tlalpan, CDMX. Deploy target: Railway (Next.js + Postgres).
+Production web app for a torta restaurant in Tlalpan, CDMX. Deploy target: Vercel (Next.js + Postgres serverless).
 Domain owned by client. Reference sites: kfc.com.mx (bold, appetite-driven, fast checkout) × fiveguys.com (build-your-own, straightforward ordering) with modern immersive scroll animation.
 
 ## Business facts
@@ -49,7 +49,7 @@ Vintage hand-painted Mexican fonda sign × modern fast-food energy:
 ### FOUNDATION (agent F)
 - `src/app/globals.css` — @import "tailwindcss"; @theme tokens above; base styles; grain utility; `.btn-primary` etc component classes if needed
 - `src/app/layout.tsx` — root layout: next/font (Alfa Slab One as `--font-display`, Archivo as `--font-body`), metadata (title "Tortas Don Manuel — Desde 1972", description, es_MX locale, openGraph), `<html lang="es">`
-- `src/app/api/health/route.ts` — `GET` returns `{ ok: true }` (Railway healthcheck; must NOT touch DB)
+- `src/app/api/health/route.ts` — `GET` returns `{ ok: true }` (healthcheck; must NOT touch DB)
 - `src/lib/utils.ts` — `formatPrice(n: number): string` ("$45" / "$49.50"), `cn(...classes)` simple joiner, `slugify(s)`
 - `src/lib/menu-data.ts` — `MENU_FALLBACK` const: full menu below as typed data; export types `MenuVariant {label, price}`, `MenuItemData`, `CategoryData`, `BuilderGroupData`, `BuilderOptionData`; also `BUILDER_FALLBACK` (builder groups below)
 - `src/lib/menu.ts` — server-only helpers: `getMenu(): Promise<CategoryData[]>` (Prisma → fallback on error), `getBuilder(): Promise<BuilderGroupData[]>` (same pattern). Category/items mapped to the same shape as fallback types so UI is source-agnostic.

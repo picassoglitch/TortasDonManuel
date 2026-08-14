@@ -2,7 +2,7 @@
 
 Sitio oficial de pedidos de Tortas Don Manuel — Tizimín 163-8, Lomas de Padierna, Tlalpan, CDMX. Desde 1972.
 
-Next.js 15 · Postgres (Prisma) · Mercado Pago · Railway.
+Next.js 15 · Postgres (Prisma) · Mercado Pago · Vercel.
 
 ## Funcionalidad
 
@@ -14,7 +14,7 @@ Next.js 15 · Postgres (Prisma) · Mercado Pago · Railway.
 ## Desarrollo local
 
 ```bash
-cp .env.example .env   # completa DATABASE_URL y SESSION_SECRET
+cp .env.example .env   # completa DATABASE_URL, DIRECT_URL y SESSION_SECRET
 npm install
 npx prisma migrate dev # o db:push si no quieres migraciones locales
 npm run db:seed        # crea admin (SEED_ADMIN_*) y todo el menú
@@ -23,15 +23,37 @@ npm run dev
 
 Sin base de datos, el sitio público sigue funcionando con el menú estático de respaldo (`src/lib/menu-data.ts`); el admin sí requiere Postgres.
 
-## Deploy en Railway
+## Deploy en Vercel
 
-1. Nuevo proyecto → **Deploy from GitHub repo** (este repo).
-2. Agrega el plugin **PostgreSQL**; Railway inyecta `DATABASE_URL`.
-3. Variables (Settings → Variables): copia de `.env.example` — como mínimo `SESSION_SECRET`, `NEXT_PUBLIC_SITE_URL` (el dominio), `SEED_ADMIN_EMAIL`, `SEED_ADMIN_PASSWORD`.
-4. El deploy corre `prisma migrate deploy` + `next start` (ver `railway.json`, healthcheck en `/api/health`).
-5. Primera vez: `railway run npm run db:seed` para poblar menú y admin.
-6. Dominio propio: Settings → Networking → Custom Domain.
-7. Mercado Pago: crea credenciales en el panel de desarrolladores de MP, setea `MERCADOPAGO_ACCESS_TOKEN` + `NEXT_PUBLIC_MERCADOPAGO_PUBLIC_KEY` y enciende `NEXT_PUBLIC_PAYMENTS_ENABLED=true`.
+**1. Base de datos.** Crea una Postgres serverless (Vercel Postgres o Neon). Necesitas las dos cadenas:
+
+- `DATABASE_URL` — la **pooled** (host con `-pooler`), con `?sslmode=require&pgbouncer=true&connection_limit=1`. Cada invocación serverless abre su propia conexión; sin pooler y sin `connection_limit=1` la base se satura.
+- `DIRECT_URL` — la directa, sin `-pooler`. Solo la usa `prisma migrate`.
+
+**2. Proyecto.** Vercel → **Add New → Project** → importa este repo. Framework: Next.js (autodetectado). No cambies el Build Command: el repo trae un script `vercel-build` que corre `prisma generate && prisma migrate deploy && next build`, así que **las migraciones se aplican en cada deploy** (esto reemplaza al `startCommand` que se usaba en Railway).
+
+**3. Variables de entorno** (Settings → Environment Variables), para Production y Preview: todo lo de `.env.example`. Mínimo indispensable: `DATABASE_URL`, `DIRECT_URL`, `SESSION_SECRET`, `NEXT_PUBLIC_SITE_URL` (el dominio final).
+
+**4. Semilla, una sola vez.** Vercel no tiene shell remota; corre el seed desde tu máquina apuntando a la base nueva:
+
+```bash
+DATABASE_URL="<pooled>" DIRECT_URL="<directa>" npm run db:seed
+```
+
+**5. Dominio.** Settings → Domains. Actualiza `NEXT_PUBLIC_SITE_URL` y vuelve a desplegar.
+
+**6. Mercado Pago.** Credenciales en el panel de desarrolladores de MP → `MERCADOPAGO_ACCESS_TOKEN` + `NEXT_PUBLIC_MERCADOPAGO_PUBLIC_KEY`, y enciende `NEXT_PUBLIC_PAYMENTS_ENABLED=true`.
+
+**7. Webhooks.** Reapunta las URLs al dominio de Vercel: Mercado Pago → `/api/webhooks/mercadopago`, WhatsApp (Meta) → `/api/webhooks/whatsapp` con el mismo `WHATSAPP_VERIFY_TOKEN`.
+
+### Migrar los datos que ya viven en Railway
+
+```bash
+pg_dump --no-owner --no-acl "<DATABASE_URL de Railway>" -Fc -f tdm.dump
+pg_restore --no-owner --no-acl -d "<DIRECT_URL de la base nueva>" tdm.dump
+```
+
+Las imágenes del panel de medios viven como `bytea` dentro de la propia base, así que el dump se las lleva; no hay archivos sueltos que copiar.
 
 ## Integración futura: Soft Restaurant
 
