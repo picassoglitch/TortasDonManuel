@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Alfa_Slab_One, Archivo } from "next/font/google";
+import { siteUrl } from "@/lib/utils";
 import "./globals.css";
 
 const alfa = Alfa_Slab_One({
@@ -16,7 +17,7 @@ const archivo = Archivo({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"),
+  metadataBase: new URL(siteUrl()),
   title: {
     default: "Tortas Don Manuel — Desde 1972",
     template: "%s · Tortas Don Manuel",

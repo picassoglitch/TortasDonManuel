@@ -1,4 +1,5 @@
 import { MercadoPagoConfig, Payment, Preference } from "mercadopago";
+import { siteUrl } from "@/lib/utils";
 
 let config: MercadoPagoConfig | null = null;
 
@@ -24,7 +25,7 @@ export async function createPreference(
   const cfg = getConfig();
   if (!cfg) return null;
 
-  const site = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+  const site = siteUrl();
   const orderUrl = `${site}/pedido/${order.id}`;
 
   const res = await new Preference(cfg).create({
