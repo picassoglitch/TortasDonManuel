@@ -1,12 +1,9 @@
 import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
+import { sessionSecret as secret } from "@/lib/session-secret";
 
 const COOKIE_NAME = "tdm_session";
 const MAX_AGE = 60 * 60 * 24 * 7;
-
-function secret(): Uint8Array {
-  return new TextEncoder().encode(process.env.SESSION_SECRET ?? "tdm-dev-secret");
-}
 
 export type SessionPayload = {
   adminId: string;

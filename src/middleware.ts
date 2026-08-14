@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { jwtVerify } from "jose";
+import { sessionSecret } from "@/lib/session-secret";
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
@@ -10,10 +11,9 @@ export async function middleware(req: NextRequest) {
   if (!token) return NextResponse.redirect(loginUrl);
 
   try {
-    await jwtVerify(
-      token,
-      new TextEncoder().encode(process.env.SESSION_SECRET ?? "tdm-dev-secret")
-    );
+    // Si SESSION_SECRET falta en producción, sessionSecret() tira y caemos al
+    // catch: sin panel, pero sin sesiones falsificables.
+    await jwtVerify(token, sessionSecret());
     return NextResponse.next();
   } catch {
     const res = NextResponse.redirect(loginUrl);
